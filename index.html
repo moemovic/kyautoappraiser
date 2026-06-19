@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pay Stub Generator — Kentucky Auto Damage Appraiser</title>
+<style>
+  :root{
+    --navy:#16284f;
+    --navy-deep:#0c1a36;
+    --gold:#f0b429;
+    --gold-deep:#d99a0e;
+    --paper:#fbfaf7;
+    --line:#e3e0d6;
+    --ink:#1c2230;
+    --muted:#6b7280;
+    --good:#1f7a4d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+
+  .masthead{
+    display:flex;align-items:center;gap:16px;
+    padding-bottom:18px;border-bottom:3px solid var(--navy);
+    margin-bottom:22px;
+  }
+  .badge{
+    width:56px;height:56px;border-radius:10px;
+    background:linear-gradient(135deg,var(--navy),var(--navy-deep));
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .badge svg{width:34px;height:34px;}
+  .masthead h1{
+    margin:0;font-size:1.05rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--navy);font-weight:700;
+  }
+  .masthead p{margin:2px 0 0;font-size:.82rem;color:var(--muted);}
+
+  h2.section-title{
+    font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--navy);margin:0 0 12px;font-weight:700;
+    display:flex;align-items:center;gap:8px;
+  }
+  h2.section-title::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:20px;margin-bottom:18px;
+  }
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
+
+  label{display:block;font-size:.78rem;font-weight:600;color:var(--navy);margin:0 0 5px;}
+  input[type=text],input[type=date],input[type=number],input[type=email],select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;
+    font-size:.92rem;background:#fdfdfc;color:var(--ink);
+  }
+  input:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold-deep);}
+  .field{margin-bottom:14px;}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.4;}
+  .hint b{color:var(--navy);}
+
+  table.earn{width:100%;border-collapse:collapse;margin-top:6px;}
+  table.earn th{
+    text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--muted);padding:6px 6px;border-bottom:2px solid var(--navy);
+  }
+  table.earn td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.earn input,table.earn select{padding:7px 8px;font-size:.88rem;}
+  .amt-cell{text-align:right;font-weight:600;white-space:nowrap;padding-top:14px;}
+  .rm-btn{
+    background:none;border:none;color:#b3261e;cursor:pointer;font-size:1.1rem;
+    padding:6px;line-height:1;
+  }
+  .rm-btn:hover{color:#7e1a14;}
+  .empty-row{color:var(--muted);font-style:italic;padding:14px 6px;font-size:.88rem;}
+
+  .add-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--navy);color:#fff;border:none;border-radius:7px;
+    padding:8px 14px;font-size:.85rem;font-weight:600;cursor:pointer;
+  }
+  .add-btn:hover{background:var(--navy-deep);}
+
+  .totals-strip{display:flex;justify-content:flex-end;gap:28px;margin-top:14px;flex-wrap:wrap;}
+  .tot{text-align:right;}
+  .tot .lbl{font-size:.72rem;text-transform:uppercase;color:var(--muted);letter-spacing:.04em;}
+  .tot .val{font-size:1.05rem;font-weight:700;color:var(--navy);}
+  .tot.net .val{color:var(--good);font-size:1.3rem;}
+
+  /* ---- preview / printable stub ---- */
+  #stub{
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:32px;
+  }
+  .stub-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px;}
+  .stub-head .logo-row{display:flex;align-items:center;gap:14px;}
+  .stub-head .logo-row .badge{width:64px;height:64px;}
+  .co-name{font-weight:800;color:var(--navy);font-size:1.15rem;}
+  .co-tag{font-size:.72rem;color:var(--gold-deep);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .meta-box{text-align:right;font-size:.85rem;color:var(--ink);line-height:1.5;}
+  .meta-box .k{color:var(--muted);}
+
+  .contact-block{font-size:.85rem;line-height:1.55;margin:18px 0;color:var(--ink);}
+  .stub-for{font-size:1.3rem;font-weight:800;color:var(--navy);margin:18px 0 14px;border-top:2px solid var(--navy);padding-top:16px;}
+
+  table.stub-table{width:100%;border-collapse:collapse;font-size:.86rem;}
+  table.stub-table th{
+    text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--muted);
+    border-bottom:2px solid var(--navy);padding:6px 4px;letter-spacing:.03em;
+  }
+  table.stub-table td{padding:7px 4px;border-bottom:1px solid var(--line);}
+  table.stub-table th:last-child,table.stub-table td:last-child{text-align:right;}
+
+  .stub-summary{text-align:right;margin-top:14px;font-size:.92rem;line-height:1.9;}
+  .stub-summary .net{font-size:1.25rem;font-weight:800;color:var(--good);}
+  .stub-ytd{margin-top:10px;text-align:right;font-size:.82rem;color:var(--muted);}
+
+  .export-row{display:flex;justify-content:flex-end;margin-top:18px;}
+  .export-btn{
+    display:inline-flex;align-items:center;gap:8px;background:var(--gold);
+    color:var(--navy-deep);border:none;border-radius:8px;padding:11px 20px;
+    font-weight:700;font-size:.92rem;cursor:pointer;
+  }
+  .export-btn:hover{background:var(--gold-deep);}
+
+  @media print{
+    body{background:#fff;padding:0;}
+    .no-print{display:none !important;}
+    #stub{border:none;border-radius:0;padding:0;}
+    .wrap{max-width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead no-print">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 16l1.5-5A2 2 0 0 1 6.4 9.6h11.2a2 2 0 0 1 1.9 1.4L21 16" stroke="#f0b429" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="16" width="18" height="3.2" rx="1" stroke="#f0b429" stroke-width="1.6"/><circle cx="7.5" cy="19.2" r="1.4" fill="#f0b429"/><circle cx="16.5" cy="19.2" r="1.4" fill="#f0b429"/></svg>
+    </div>
+    <div>
+      <h1>Kentucky Auto Damage Appraiser</h1>
+      <p>Pay stub generator — calculate and export contractor pay stubs</p>
+    </div>
+  </div>
+
+  <!-- INPUT FORM -->
+  <div class="no-print">
+    <div class="card">
+      <div class="grid3">
+        <div>
+          <h2 class="section-title">Contractor</h2>
+          <div class="field"><label>Name</label><input type="text" id="cName" placeholder="Full name"></div>
+          <div class="field"><label>Email</label><input type="email" id="cEmail" placeholder="name@email.com"></div>
+          <div class="field"><label>ID</label><input type="text" id="cID" placeholder="Employee / contractor ID"></div>
+        </div>
+        <div>
+          <h2 class="section-title">Pay Period</h2>
+          <div class="field"><label>Start</label><input type="date" id="pStart"></div>
+          <div class="field"><label>End</label><input type="date" id="pEnd"></div>
+          <div class="field"><label>Pay Date</label><input type="date" id="pPayDate"></div>
+        </div>
+        <div>
+          <h2 class="section-title">Payment Method</h2>
+          <div class="field">
+            <label>Method</label>
+            <select id="payMethod">
+              <option value="">Select</option>
+              <option value="Direct Deposit">Direct Deposit</option>
+              <option value="Check">Check</option>
+              <option value="ACH">ACH</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+          <p class="hint">Mileage is only applicable to <b>Photo Capture</b> jobs, calculated at <b>$0.20/mi</b>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Earnings</h2>
+      <button class="add-btn" onclick="addRow()">+ Add line item</button>
+      <table class="earn" id="earnTable">
+        <thead>
+          <tr><th style="width:18%">Category</th><th style="width:13%">Date</th><th style="width:22%">Notes</th><th style="width:10%">Qty / Mi</th><th style="width:12%">Rate</th><th style="width:13%">Amount</th><th style="width:4%"></th></tr>
+        </thead>
+        <tbody id="earnBody"></tbody>
+      </table>
+      <div id="emptyMsg" class="empty-row">No items yet. Click "+ Add line item" to start.</div>
+
+      <div class="totals-strip">
+        <div class="tot"><div class="lbl">Gross Earnings</div><div class="val" id="grossOut">$0.00</div></div>
+        <div class="tot"><div class="lbl">+ Mileage</div><div class="val" id="mileageOut">$0.00</div></div>
+        <div class="tot net"><div class="lbl">Net Pay</div><div class="val" id="netOut">$0.00</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Year To Date</h2>
+      <div class="field" style="max-width:320px;">
+        <label>Year To Date Total</label>
+        <input type="text" id="ytdInput" placeholder="e.g. $12,400.00">
+      </div>
+      <p class="hint">Whatever you type here appears exactly as written on the pay stub below and in the exported PDF.</p>
+    </div>
+  </div>
+
+  <!-- PRINTABLE STUB -->
+  <div id="stub">
+    <div class="stub-head">
+      <div class="logo-row">
+        <div class="badge">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 16l1.5-5A2 2 0 0 1 6.4 9.6h11.2a2 2 0 0 1 1.9 1.4L21 16" stroke="#f0b429" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="16" width="18" height="3.2" rx="1" stroke="#f0b429" stroke-width="1.6"/><circle cx="7.5" cy="19.2" r="1.4" fill="#f0b429"/><circle cx="16.5" cy="19.2" r="1.4" fill="#f0b429"/></svg>
+        </div>
+        <div>
+          <div class="co-name">KENTUCKY AUTO DAMAGE APPRAISER</div>
+          <div class="co-tag">Relationship built on duty and trust</div>
+        </div>
+      </div>
+      <div class="meta-box">
+        <div><span class="k">Pay Period:</span> <span id="outPeriod">—</span></div>
+        <div><span class="k">Pay Date:</span> <span id="outPayDate">—</span></div>
+        <div><span class="k">Paid via:</span> <span id="outMethod">—</span></div>
+      </div>
+    </div>
+
+    <div class="contact-block">
+      assignments@kyautodamageappraiser.com<br>
+      (502) 422-1901<br>
+      P O Box 112, Bloomfield, KY 40008-0112
+    </div>
+
+    <div class="stub-for">Pay Stub for <span id="outName">—</span></div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px;" id="outSub">—</div>
+
+    <table class="stub-table">
+      <thead><tr><th>Category</th><th>Date</th><th>Notes</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+      <tbody id="outBody"><tr><td colspan="6" style="color:var(--muted);font-style:italic;">No items yet.</td></tr></tbody>
+    </table>
+
+    <div class="stub-summary">
+      Gross Earnings: <b id="outGross">$0.00</b><br>
+      + Mileage: <b id="outMileage">$0.00</b><br>
+      <span class="net">Net Pay: <span id="outNet">$0.00</span></span>
+    </div>
+    <div class="stub-ytd">Year To Date Total: <span id="outYTD">—</span></div>
+  </div>
+
+  <div class="export-row no-print">
+    <button class="export-btn" onclick="window.print()">⬇ Export PDF</button>
+  </div>
+
+</div>
+
+<script>
+const CATS = ["Standard Inspection","Photo Capture","Re-Inspection","Total Loss Review","Supplement Review","Travel / Misc"];
+let rows = [];
+let counter = 0;
+
+function addRow(){
+  rows.push({id: counter++, category: CATS[0], date:'', notes:'', qty:1, rate:0});
+  render();
+}
+function removeRow(id){
+  rows = rows.filter(r=>r.id!==id);
+  render();
+}
+function updateRow(id, field, value){
+  const r = rows.find(r=>r.id===id);
+  if(!r) return;
+  r[field] = (field==='qty'||field==='rate') ? parseFloat(value)||0 : value;
+  render();
+}
+function fmt(n){
+  return '$' + (Math.round(n*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtDate(d){
+  if(!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${m}/${day}/${y}`;
+}
+
+function render(){
+  const body = document.getElementById('earnBody');
+  const empty = document.getElementById('emptyMsg');
+  body.innerHTML = '';
+  empty.style.display = rows.length ? 'none' : 'block';
+
+  let gross = 0, mileage = 0;
+
+  rows.forEach(r=>{
+    const isMileage = r.category === 'Photo Capture';
+    const rate = isMileage ? 0.20 : r.rate;
+    const amount = r.qty * rate;
+    if(isMileage) mileage += amount; else gross += amount;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><select onchange="updateRow(${r.id},'category',this.value)">
+        ${CATS.map(c=>`<option value="${c}" ${c===r.category?'selected':''}>${c}</option>`).join('')}
+      </select></td>
+      <td><input type="date" value="${r.date}" onchange="updateRow(${r.id},'date',this.value)"></td>
+      <td><input type="text" value="${r.notes}" placeholder="Claim # / details" oninput="updateRow(${r.id},'notes',this.value)"></td>
+      <td><input type="number" min="0" step="0.1" value="${r.qty}" oninput="updateRow(${r.id},'qty',this.value)"></td>
+      <td><input type="number" min="0" step="0.01" value="${isMileage ? 0.20 : r.rate}" ${isMileage?'disabled':''} oninput="updateRow(${r.id},'rate',this.value)"></td>
+      <td class="amt-cell">${fmt(amount)}</td>
+      <td><button class="rm-btn" onclick="removeRow(${r.id})" title="Remove">✕</button></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  const net = gross + mileage;
+  document.getElementById('grossOut').textContent = fmt(gross);
+  document.getElementById('mileageOut').textContent = fmt(mileage);
+  document.getElementById('netOut').textContent = fmt(net);
+
+  renderStub(gross, mileage, net);
+}
+
+function renderStub(gross, mileage, net){
+  document.getElementById('outName').textContent = document.getElementById('cName').value || '—';
+  const sub = [];
+  const email = document.getElementById('cEmail').value;
+  const id = document.getElementById('cID').value;
+  if(email) sub.push(email);
+  if(id) sub.push('ID: '+id);
+  document.getElementById('outSub').textContent = sub.length ? sub.join(' · ') : '';
+
+  const start = document.getElementById('pStart').value;
+  const end = document.getElementById('pEnd').value;
+  document.getElementById('outPeriod').textContent = (start||end) ? `${fmtDate(start)} – ${fmtDate(end)}` : '—';
+  document.getElementById('outPayDate').textContent = fmtDate(document.getElementById('pPayDate').value);
+  document.getElementById('outMethod').textContent = document.getElementById('payMethod').value || '—';
+
+  const outBody = document.getElementById('outBody');
+  if(rows.length === 0){
+    outBody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);font-style:italic;">No items yet.</td></tr>`;
+  } else {
+    outBody.innerHTML = rows.map(r=>{
+      const isMileage = r.category === 'Photo Capture';
+      const rate = isMileage ? 0.20 : r.rate;
+      const amount = r.qty * rate;
+      return `<tr>
+        <td>${r.category}</td>
+        <td>${fmtDate(r.date)}</td>
+        <td>${r.notes||''}</td>
+        <td>${r.qty}</td>
+        <td>${fmt(rate)}</td>
+        <td>${fmt(amount)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('outGross').textContent = fmt(gross);
+  document.getElementById('outMileage').textContent = fmt(mileage);
+  document.getElementById('outNet').textContent = fmt(net);
+  document.getElementById('outYTD').textContent = document.getElementById('ytdInput').value || '—';
+}
+
+['cName','cEmail','cID','pStart','pEnd','pPayDate','payMethod','ytdInput'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+  document.getElementById(id).addEventListener('change', render);
+});
+
+render();
+</script>
+</body>
+</html>
