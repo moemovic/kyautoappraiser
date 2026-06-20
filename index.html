@@ -173,10 +173,10 @@
             <label>Method</label>
             <select id="payMethod">
               <option value="">Select</option>
-              <option value="Direct Deposit">Direct Deposit</option>
               <option value="Check">Check</option>
-              <option value="ACH">ACH</option>
-              <option value="Cash">Cash</option>
+              <option value="Venmo">Venmo</option>
+              <option value="Zelle">Zelle</option>
+              <option value="Lemfi">Lemfi</option>
             </select>
           </div>
           <p class="hint">Mileage is only applicable to <b>Photo Capture</b> jobs, calculated at <b>$0.20/mi</b>.</p>
@@ -260,12 +260,12 @@
 </div>
 
 <script>
-const CATS = ["Standard Inspection","Photo Capture","Re-Inspection","Total Loss Review","Supplement Review","Travel / Misc"];
+const CATS = ["Photo Capture","Estimate Writing","NADA Research","Salvage Bid","CCC Profile","Photo Renaming","Bookkeeping","Office Administration","Others"];
 let rows = [];
 let counter = 0;
 
 function addRow(){
-  rows.push({id: counter++, category: CATS[0], date:'', notes:'', qty:1, rate:0});
+  rows.push({id: counter++, category: CATS[0], date:'', notes:'', qty:1, rate:0, mileageQty:0});
   render();
 }
 function removeRow(id){
@@ -275,7 +275,7 @@ function removeRow(id){
 function updateRow(id, field, value){
   const r = rows.find(r=>r.id===id);
   if(!r) return;
-  r[field] = (field==='qty'||field==='rate') ? parseFloat(value)||0 : value;
+  r[field] = (field==='qty'||field==='rate'||field==='mileageQty') ? parseFloat(value)||0 : value;
   render();
 }
 function fmt(n){
@@ -296,10 +296,11 @@ function render(){
   let gross = 0, mileage = 0;
 
   rows.forEach(r=>{
-    const isMileage = r.category === 'Photo Capture';
-    const rate = isMileage ? 0.20 : r.rate;
-    const amount = r.qty * rate;
-    if(isMileage) mileage += amount; else gross += amount;
+    const isMileageCat = r.category === 'Photo Capture';
+    const amount = r.qty * r.rate;
+    gross += amount;
+    const mileageAmt = isMileageCat ? r.mileageQty * 0.20 : 0;
+    mileage += mileageAmt;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -309,11 +310,23 @@ function render(){
       <td><input type="date" value="${r.date}" onchange="updateRow(${r.id},'date',this.value)"></td>
       <td><input type="text" value="${r.notes}" placeholder="Claim # / details" oninput="updateRow(${r.id},'notes',this.value)"></td>
       <td><input type="number" min="0" step="0.1" value="${r.qty}" oninput="updateRow(${r.id},'qty',this.value)"></td>
-      <td><input type="number" min="0" step="0.01" value="${isMileage ? 0.20 : r.rate}" ${isMileage?'disabled':''} oninput="updateRow(${r.id},'rate',this.value)"></td>
+      <td><input type="number" min="0" step="0.01" value="${r.rate}" oninput="updateRow(${r.id},'rate',this.value)"></td>
       <td class="amt-cell">${fmt(amount)}</td>
       <td><button class="rm-btn" onclick="removeRow(${r.id})" title="Remove">✕</button></td>
     `;
     body.appendChild(tr);
+
+    if(isMileageCat){
+      const mr = document.createElement('tr');
+      mr.innerHTML = `
+        <td colspan="3" style="color:var(--muted);font-size:.82rem;padding-left:18px;">↳ Mileage (at $0.20/mi)</td>
+        <td><input type="number" min="0" step="1" value="${r.mileageQty}" oninput="updateRow(${r.id},'mileageQty',this.value)"></td>
+        <td style="color:var(--muted);font-size:.85rem;">$0.20</td>
+        <td class="amt-cell">${fmt(mileageAmt)}</td>
+        <td></td>
+      `;
+      body.appendChild(mr);
+    }
   });
 
   const net = gross + mileage;
@@ -344,17 +357,26 @@ function renderStub(gross, mileage, net){
     outBody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);font-style:italic;">No items yet.</td></tr>`;
   } else {
     outBody.innerHTML = rows.map(r=>{
-      const isMileage = r.category === 'Photo Capture';
-      const rate = isMileage ? 0.20 : r.rate;
-      const amount = r.qty * rate;
-      return `<tr>
+      const isMileageCat = r.category === 'Photo Capture';
+      const amount = r.qty * r.rate;
+      let html = `<tr>
         <td>${r.category}</td>
         <td>${fmtDate(r.date)}</td>
         <td>${r.notes||''}</td>
         <td>${r.qty}</td>
-        <td>${fmt(rate)}</td>
+        <td>${fmt(r.rate)}</td>
         <td>${fmt(amount)}</td>
       </tr>`;
+      if(isMileageCat && r.mileageQty > 0){
+        const mileageAmt = r.mileageQty * 0.20;
+        html += `<tr>
+          <td colspan="3" style="color:var(--muted);font-size:.82rem;">↳ Mileage</td>
+          <td>${r.mileageQty}</td>
+          <td>$0.20</td>
+          <td>${fmt(mileageAmt)}</td>
+        </tr>`;
+      }
+      return html;
     }).join('');
   }
 
