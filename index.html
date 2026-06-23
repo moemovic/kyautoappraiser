@@ -259,7 +259,7 @@
   </div>
 
   <div class="export-row no-print">
-    <button class="export-btn" onclick="window.print()">⬇ Export PDF</button>
+    <button class="export-btn" onclick="exportPDF()">⬇ Export PDF</button>
   </div>
 
 </div>
@@ -413,6 +413,15 @@ function renderStub(gross, mileage, net){
   document.getElementById(id).addEventListener('input', render);
   document.getElementById(id).addEventListener('change', render);
 });
+
+function exportPDF(){
+  const name = (document.getElementById('cName').value || 'contractor').trim().replace(/\s+/g,'_');
+  const payDate = document.getElementById('pPayDate').value || new Date().toISOString().slice(0,10);
+  const originalTitle = document.title;
+  document.title = `${name}_stub_${payDate}`;
+  window.print();
+  setTimeout(()=>{ document.title = originalTitle; }, 500);
+}
 
 render();
 </script>
