@@ -280,7 +280,7 @@ function removeRow(id){
 function updateRow(id, field, value){
   const r = rows.find(r=>r.id===id);
   if(!r) return;
-  r[field] = (field==='qty'||field==='rate'||field==='mileageQty') ? parseFloat(value)||0 : value;
+  r[field] = value;
   render();
 }
 function fmt(n){
@@ -310,9 +310,12 @@ function render(){
 
   rows.forEach(r=>{
     const isMileageCat = r.category === 'Photo Capture';
-    const amount = r.qty * r.rate;
+    const qtyNum = parseFloat(r.qty) || 0;
+    const rateNum = parseFloat(r.rate) || 0;
+    const mileageQtyNum = parseFloat(r.mileageQty) || 0;
+    const amount = qtyNum * rateNum;
     gross += amount;
-    const mileageAmt = isMileageCat ? r.mileageQty * 0.20 : 0;
+    const mileageAmt = isMileageCat ? mileageQtyNum * 0.20 : 0;
     mileage += mileageAmt;
 
     const tr = document.createElement('tr');
@@ -381,17 +384,20 @@ function renderStub(gross, mileage, net){
   } else {
     outBody.innerHTML = rows.map(r=>{
       const isMileageCat = r.category === 'Photo Capture';
-      const amount = r.qty * r.rate;
+      const qtyNum = parseFloat(r.qty) || 0;
+      const rateNum = parseFloat(r.rate) || 0;
+      const mileageQtyNum = parseFloat(r.mileageQty) || 0;
+      const amount = qtyNum * rateNum;
       let html = `<tr>
         <td>${r.category}</td>
         <td>${fmtDate(r.date)}</td>
         <td>${r.notes||''}</td>
         <td>${r.qty}</td>
-        <td>${fmt(r.rate)}</td>
+        <td>${fmt(rateNum)}</td>
         <td>${fmt(amount)}</td>
       </tr>`;
-      if(isMileageCat && r.mileageQty > 0){
-        const mileageAmt = r.mileageQty * 0.20;
+      if(isMileageCat && mileageQtyNum > 0){
+        const mileageAmt = mileageQtyNum * 0.20;
         html += `<tr>
           <td colspan="3" style="color:var(--muted);font-size:.82rem;">↳ Mileage</td>
           <td>${r.mileageQty}</td>
